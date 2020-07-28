@@ -24,7 +24,7 @@ platform :ios, '11.0'
 use_frameworks!
 
 target '<Your Target Name>' do
-    pod 'Rebar', '~> 1.1.0'
+    pod 'Rebar', '~> 1.2.0'
 end
 ```
 
