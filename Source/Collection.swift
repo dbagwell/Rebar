@@ -25,4 +25,16 @@ extension Collection {
         return self.indices.contains(index) ? self[index] : nil
     }
     
+    public func suffix(while predicate: (Element) throws -> Bool) rethrows -> ReversedCollection<Array<Element>.SubSequence> {
+        return try self.reversed().prefix(while: predicate).reversed()
+    }
+    
+    public func dropPrefix(while predicate: (Element) throws -> Bool) rethrows -> SubSequence {
+        return try self.drop(while: predicate)
+    }
+    
+    public func dropSuffix(while predicate: (Element) throws -> Bool) rethrows -> ReversedCollection<Array<Element>.SubSequence> {
+        return try self.reversed().dropPrefix(while: predicate).reversed()
+    }
+    
 }
