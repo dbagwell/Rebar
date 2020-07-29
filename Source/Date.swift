@@ -52,4 +52,29 @@ extension Date {
         return Day(date: self)
     }
     
+    public func value(
+        of component: Calendar.Component,
+        calendar: Calendar = Calendar(identifier: .gregorian)
+    ) -> Int {
+        return calendar.component(component, from: self)
+    }
+    
+    public func setting(
+        _ component: Calendar.Component,
+        to value: Int,
+        calendar: Calendar = Calendar(identifier: .gregorian)
+    ) -> Date? {
+        var components = calendar.dateComponents(.all, from: self)
+        components.setValue(value, for: component)
+        return calendar.date(from: components)
+    }
+    
+    public func adding(
+        _ value: Int,
+        to component: Calendar.Component,
+        calendar: Calendar = Calendar(identifier: .gregorian)
+    ) -> Date? {
+        return calendar.date(byAdding: component, value: value, to: self)
+    }
+    
 }
