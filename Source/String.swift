@@ -28,4 +28,13 @@ extension String {
         return self.isEmpty ? nil : self
     }
     
+    public func matches(pattern: String) -> Bool {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return false }
+        let range = NSRange(location: 0, length: self.utf16.count)
+        let matches = regex.matches(in: self, options: [], range: range)
+        return matches.contains(where: { result in
+            return result.range == range
+        })
+    }
+    
 }
