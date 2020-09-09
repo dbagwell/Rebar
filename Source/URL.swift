@@ -22,6 +22,19 @@ import Foundation
 
 extension URL {
     
+    /// Returns a dictionary of the query parameters keyed using lowercased parameter names
+    public var queryParams: [String: String] {
+        let components = URLComponents(url: self, resolvingAgainstBaseURL: false)
+        
+        guard let items = components?.queryItems else { return [:] }
+            
+        return items.reduce([:], { result, item in
+                var result = result
+                result[item.name.lowercased()] = item.value
+                return result
+        })
+    }
+    
     public func appendingQueryParam(name: String, value: String) -> URL {
         guard var components = URLComponents(url: self, resolvingAgainstBaseURL: false) else { return self }
         if components.queryItems == nil {
