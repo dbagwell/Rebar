@@ -21,79 +21,83 @@
 import Foundation
 
 public protocol Defaults {
+    
+    /// If `suiteName` is `nil`, the `standard` user defaults suite is used.
+    /// `suiteName` is ignored if `parentGroup` is not `nil`, and the parent group's suite is used instead.
     var suiteName: String? { get }
-    var keyPrefixes: [String] { get }
+    
+    /// `userIdentifier` is ignored if `parentGroup` is not `nil`, and the parent group's userIdentifier is used instead.
+    var userIdentifier: String? { get }
+    
+    /// `parentGroup` is used to determine the user defaults suite and key paths to use when data is saved.
+    /// Key paths are constructed in the following format `userIdentifierOfBaseGroup.TypeNameOfBaseGroup.TypeNameOfSubGroup.key`.
+    var parentGroup: Defaults? { get }
+    
 }
 
-public extension Defaults {
-    
-    var suiteName: String? {
-        return nil
-    }
-    
-    var keyPrefixes: [String] {
-        return []
-    }
+extension Defaults {
     
     private var defaults: UserDefaults {
-        return UserDefaults(suiteName: self.suiteName) ??  UserDefaults.standard
-    }
-    
-    func get<ValueType: Codable>(for key: String = #function) -> ValueType? {
-        let key = self.keyPrefixes.joined(separator: ".").appending(key)
+        var group: Defaults? = self
         
-        if self.typeIsPropertyListCompatible(ValueType.self) {
-            return self.defaults.value(forKey: key) as? ValueType
+        while group?.parentGroup != nil {
+            group = self.parentGroup
         }
         
-        guard let data = self.defaults.data(forKey: key) else {
+        return UserDefaults(suiteName: group?.suiteName) ??  UserDefaults.standard
+    }
+    
+    private func fullKey(forKey key: String) -> String {
+        var strings = [key]
+        var group: Defaults? = self
+        
+        while group != nil {
+            if
+                let concreteGroup = group,
+                let string = String(describing: type(of: concreteGroup)).components(separatedBy: ".").last
+            {
+                strings.prepend(string)
+            }
+            
+            if
+                group?.parentGroup == nil,
+                let userIdentifier = group?.userIdentifier
+            {
+                strings.prepend(userIdentifier)
+            }
+            
+            group = group?.parentGroup
+        }
+        
+        return strings.joined(separator: ".")
+    }
+    
+    public func get<ValueType: Codable>(for key: String = #function) -> ValueType? {
+        guard let storedValue = self.defaults.value(forKey: self.fullKey(forKey: key)) else {
             return nil
         }
         
         do {
+            let data = try PropertyListSerialization.data(fromPropertyList: storedValue, format: .binary, options: 0)
             let decoder = PropertyListDecoder()
-            let decoded = try decoder.decode(ValueType.self, from: data)
-            return decoded
+            let value = try decoder.decode(ValueType.self, from: data)
+            return value
         } catch {
-            #if DEBUG
-                print(error)
-            #endif
-        }
-        
-        return nil
-    }
-    
-    func set<ValueType: Codable>(_ value: ValueType? = nil, key: String = #function) {
-        let key = self.keyPrefixes.joined(separator: ".").appending(key)
-        
-        if let value = value {
-            if self.typeIsPropertyListCompatible(ValueType.self) {
-                self.defaults.set(value, forKey: key)
-                return
-            }
-            
-            do {
-                let encoder = PropertyListEncoder()
-                let encoded = try encoder.encode(value)
-                self.defaults.set(encoded, forKey: key)
-                self.defaults.synchronize()
-            } catch {
-                #if DEBUG
-                    print(error)
-                #endif
-            }
-        } else {
-            self.defaults.set(nil, forKey: key)
-            self.defaults.synchronize()
+            return storedValue as? ValueType
         }
     }
     
-    private func typeIsPropertyListCompatible<ValueType>(_ type: ValueType.Type) -> Bool {
-        switch type {
-        case is String.Type, is Bool.Type, is Int.Type, is Float.Type, is Double.Type, is Date.Type:
-            return true
-        default:
-            return false
+    public func set<ValueType: Codable>(_ value: ValueType? = nil, key: String = #function) {
+        let key = self.fullKey(forKey: key)
+        
+        do {
+            let encoder = PropertyListEncoder()
+            let data = try encoder.encode(value)
+            var plistFormat =  PropertyListSerialization.PropertyListFormat.binary
+            let valueToStore = try PropertyListSerialization.propertyList(from: data, format: &plistFormat)
+            self.defaults.set(valueToStore, forKey: key)
+        } catch {
+            self.defaults.set(value, forKey: key)
         }
     }
     
