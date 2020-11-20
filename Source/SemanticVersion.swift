@@ -36,7 +36,7 @@ public struct SemanticVersion: Comparable {
     
     public init?(_ string: String) {
         guard let parts = string.components(separatedBy: ".").map(Int.init) as? [Int] else { return nil }
-        self.parts = parts
+        self.parts = Array(parts.dropSuffix(while: { $0 == 0 }))
     }
     
     
