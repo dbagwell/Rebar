@@ -72,6 +72,22 @@ extension Defaults {
         return strings.joined(separator: ".")
     }
     
+    public func get<ValueType: RawRepresentable>(for key: String = #function) -> ValueType? {
+        guard let rawValue = self.defaults.value(forKey: self.fullKey(forKey: key)) as? ValueType.RawValue else {
+            return nil
+        }
+        
+        return ValueType(rawValue: rawValue)
+    }
+    
+    public func get<ValueType: RawRepresentable & Codable>(for key: String = #function) -> ValueType? {
+        guard let rawValue = self.defaults.value(forKey: self.fullKey(forKey: key)) as? ValueType.RawValue else {
+            return nil
+        }
+        
+        return ValueType(rawValue: rawValue)
+    }
+    
     public func get<ValueType: Codable>(for key: String = #function) -> ValueType? {
         guard let storedValue = self.defaults.value(forKey: self.fullKey(forKey: key)) else {
             return nil
@@ -87,7 +103,15 @@ extension Defaults {
         }
     }
     
-    public func set<ValueType: Codable>(_ value: ValueType? = nil, key: String = #function) {
+    public func set<ValueType: RawRepresentable>(_ value: ValueType?, key: String = #function) {
+        self.defaults.set(value?.rawValue, forKey: self.fullKey(forKey: key))
+    }
+    
+    public func set<ValueType: RawRepresentable & Codable>(_ value: ValueType?, key: String = #function) {
+        self.defaults.set(value?.rawValue, forKey: self.fullKey(forKey: key))
+    }
+    
+    public func set<ValueType: Codable>(_ value: ValueType?, key: String = #function) {
         let key = self.fullKey(forKey: key)
         
         do {
