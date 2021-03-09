@@ -72,6 +72,10 @@ extension Defaults {
         return strings.joined(separator: ".")
     }
     
+    private var fragmentValueKey: String {
+        return "value"
+    }
+    
     public func get<ValueType: RawRepresentable>(for key: String = #function) -> ValueType? {
         guard let rawValue = self.defaults.value(forKey: self.fullKey(forKey: key)) as? ValueType.RawValue else {
             return nil
@@ -99,7 +103,14 @@ extension Defaults {
             let value = try decoder.decode(ValueType.self, from: data)
             return value
         } catch {
-            return storedValue as? ValueType
+            do {
+                let data = try PropertyListSerialization.data(fromPropertyList: storedValue, format: .binary, options: 0)
+                let decoder = PropertyListDecoder()
+                let value = try decoder.decode([String: ValueType].self, from: data)
+                return value[self.fragmentValueKey]
+            } catch {
+                return storedValue as? ValueType
+            }
         }
     }
     
@@ -121,7 +132,15 @@ extension Defaults {
             let valueToStore = try PropertyListSerialization.propertyList(from: data, format: &plistFormat)
             self.defaults.set(valueToStore, forKey: key)
         } catch {
-            self.defaults.set(value, forKey: key)
+            do {
+                let encoder = PropertyListEncoder()
+                let data = try encoder.encode([self.fragmentValueKey: value])
+                var plistFormat =  PropertyListSerialization.PropertyListFormat.binary
+                let valueToStore = try PropertyListSerialization.propertyList(from: data, format: &plistFormat)
+                self.defaults.set(valueToStore, forKey: key)
+            } catch {
+                self.defaults.set(value, forKey: key)
+            }
         }
     }
     
