@@ -37,4 +37,12 @@ extension Collection {
         return try self.reversed().dropPrefix(while: predicate).reversed()
     }
     
+    public func mutatingEach(by transform: (inout Element) throws -> Void) rethrows -> Array<Element> {
+        return try self.map({ element in
+            var element = element
+            try transform(&element)
+            return element
+        })
+     }
+    
 }
