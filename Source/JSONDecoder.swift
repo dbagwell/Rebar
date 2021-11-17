@@ -20,16 +20,11 @@
 
 import Foundation
 
-extension Dictionary {
+extension JSONDecoder {
     
-    public static func + (lhs: Self, rhs: Self) -> Self {
-        var result = lhs
-        
-        for (key, value) in rhs {
-            result[key] = value
-        }
-        
-        return result
+    public func decode<T: Decodable>(_ type: T.Type, from dictionary: [String: Any]) throws -> T {
+        let data = try JSONSerialization.data(withJSONObject: dictionary, options: [])
+        return try self.decode(type, from: data)
     }
     
 }
