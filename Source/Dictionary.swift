@@ -32,4 +32,8 @@ extension Dictionary {
         return result
     }
     
+    public mutating func updateValue(forKey key: Key, using transform: (Value?) throws -> Value?) rethrows {
+        self[key] = try transform(self[key])
+    }
+    
 }
