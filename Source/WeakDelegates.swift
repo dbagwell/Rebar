@@ -37,11 +37,11 @@ public class WeakDelegates<Type> {
     public init() {}
     
     public func addDelegate(_ delegate: Type) {
-        self.weakDelegates.append(AnyWeakObject(delegate as? AnyObject))
+        self.weakDelegates.append(AnyWeakObject(delegate as AnyObject))
     }
     
     public func removeDelegate(_ delegate: Type) {
-        for (index, delegateInArray) in self.weakDelegates.enumerated().reversed() where delegateInArray.value === delegate as? AnyObject {
+        for (index, delegateInArray) in self.weakDelegates.enumerated().reversed() where delegateInArray.value === delegate as AnyObject {
             self.weakDelegates.remove(at: index)
         }
     }
