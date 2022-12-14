@@ -32,6 +32,12 @@ extension Dictionary {
         return result
     }
     
+    public static func += (lhs: inout Self, rhs: Self) {
+        for (key, value) in rhs {
+            lhs[key] = value
+        }
+    }
+    
     public mutating func updateValue(forKey key: Key, using transform: (Value?) throws -> Value?) rethrows {
         self[key] = try transform(self[key])
     }
