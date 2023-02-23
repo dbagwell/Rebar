@@ -25,8 +25,15 @@ extension RangeReplaceableCollection {
     }
     
     public func replacingFirst(where condition: (Element) throws -> Bool, with element: Element) rethrows -> Self {
-        var collection = try self.removingFirst(where: condition)
-        collection.append(element)
+        var collection = self
+        
+        if let index = try collection.firstIndex(where: condition) {
+            collection.remove(at: index)
+            collection.insert(element, at: index)
+        } else {
+            collection.append(element)
+        }
+        
         return collection
     }
     
