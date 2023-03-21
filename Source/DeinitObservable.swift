@@ -20,7 +20,7 @@
 
 import UIKit
 
-private var deinitializationObserverKey: UInt8 = 0
+private var deinitObserversKey: UInt8 = 0
 
 public protocol DeinitObservable: AnyObject {
     func onDeinit(_ execute: @escaping () -> Void)
@@ -28,14 +28,14 @@ public protocol DeinitObservable: AnyObject {
 
 extension DeinitObservable {
     
-    private var deinitObserver: DeinitObserver {
+    private var deinitObservers: [DeinitObserver] {
         get {
-            return objc_getAssociatedObject(self, &deinitializationObserverKey) as! DeinitObserver
+            return objc_getAssociatedObject(self, &deinitObserversKey) as? [DeinitObserver] ?? []
         }
         set {
             objc_setAssociatedObject(
                 self,
-                &deinitializationObserverKey,
+                &deinitObserversKey,
                 newValue,
                 objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
@@ -43,7 +43,7 @@ extension DeinitObservable {
     }
     
     public func onDeinit(_ execute: @escaping () -> ()) {
-        self.deinitObserver = DeinitObserver(deinitAction: execute)
+        self.deinitObservers.append(DeinitObserver(deinitAction: execute))
     }
 }
 
