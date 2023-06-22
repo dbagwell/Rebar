@@ -39,7 +39,9 @@ extension CaseMatchable {
     }
     
     private func associatedValue<AssociatedValue>() -> AssociatedValue? {
-        guard Mirror(reflecting: self).displayStyle == .enum else {
+        let mirror = Mirror(reflecting: self)
+        
+        guard mirror.displayStyle == .enum else {
             return nil
         }
         
@@ -47,11 +49,11 @@ extension CaseMatchable {
             return unsafeBitCast((), to: AssociatedValue.self)
         }
 
-        var any: Any = self
-
-        while case let (_, anyChild)? = Mirror(reflecting: any).children.first {
-            if let child = anyChild as? AssociatedValue { return child }
-            any = anyChild
+        if
+            let firstChild = mirror.children.first?.1,
+            case let secondChild = Mirror(reflecting: firstChild).children.first?.1 as? AssociatedValue
+        {
+            return secondChild
         }
         
         return nil
