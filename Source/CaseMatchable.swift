@@ -50,10 +50,13 @@ extension CaseMatchable {
         }
 
         if
-            let firstChild = mirror.children.first?.1,
-            case let secondChild = Mirror(reflecting: firstChild).children.first?.1 as? AssociatedValue
+            let firstChild = mirror.children.first?.1
         {
-            return secondChild
+            if let firstChild = firstChild as? AssociatedValue {
+                return firstChild
+            } else if let secondChild = Mirror(reflecting: firstChild).children.first?.1 as? AssociatedValue {
+                return secondChild
+            }
         }
         
         return nil
