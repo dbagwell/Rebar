@@ -45,4 +45,8 @@ extension Collection {
         })
      }
     
+    public var nilIfEmpty: Self? {
+        return self.isEmpty ? nil : self
+    }
+    
 }
