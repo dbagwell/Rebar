@@ -19,45 +19,43 @@
 // THE SOFTWARE.
 
 import Foundation
+import MobileCoreServices
 
 public struct File: Codable, Equatable {
     
     public enum MimeType: Codable, Equatable {
-        case image(extension: String)
-        case other(extension: String)
+        case image(type: String)
+        case video(type: String)
+        case other(type: String)
         
-        private static let imagePrefix = "image"
-        private static let otherPrefix = "application"
-        
-        public init(extension: String) {
-            if `extension`.lowercased() == "jpg" || `extension`.lowercased() == "jpeg" || `extension`.lowercased() == "png" {
-                self = .image(extension: `extension`)
+        public init(type: String) {
+            if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, type as CFString, nil)?.takeRetainedValue() {
+                if UTTypeConformsTo(uti, kUTTypeImage) {
+                    self = .image(type: type)
+                } else if UTTypeConformsTo(uti, kUTTypeMovie) {
+                    self = .video(type: type)
+                } else {
+                    self = .other(type: type)
+                }
             } else {
-                self = .other(extension: `extension`)
+                self = .other(type: type)
             }
         }
         
         public init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
-            let components = try container.decode(String.self).components(separatedBy: "/")
+            let type = try container.decode(String.self)
             
-            guard components.count == 2 else {
-                throw DecodingError.typeMismatch(
-                    MimeType.self, .init(
-                        codingPath: decoder.codingPath,
-                        debugDescription: "Unable to decode \(MimeType.self) - invalid number of string components.")
-                )
-            }
-            
-            switch components[0] {
-            case MimeType.imagePrefix: self = .image(extension: components[1])
-            case MimeType.otherPrefix: self = .other(extension: components[1])
-            default:
-                throw DecodingError.typeMismatch(
-                    MimeType.self, .init(
-                        codingPath: decoder.codingPath,
-                        debugDescription: "Unable to decode \(MimeType.self) - invalid prefix.")
-                )
+            if let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, type as CFString, nil)?.takeRetainedValue() {
+                if UTTypeConformsTo(uti, kUTTypeImage) {
+                    self = .image(type: type)
+                } else if UTTypeConformsTo(uti, kUTTypeMovie) {
+                    self = .video(type: type)
+                } else {
+                    self = .other(type: type)
+                }
+            } else {
+                self = .other(type: type)
             }
         }
         
@@ -65,11 +63,8 @@ public struct File: Codable, Equatable {
             var container = encoder.singleValueContainer()
             
             switch self {
-            case let .image(`extension`):
-                try container.encode("\(MimeType.imagePrefix)/\(`extension`)")
-                
-            case let .other(`extension`):
-                try container.encode("\(MimeType.otherPrefix)/\(`extension`)")
+            case let .image(type), let .video(type), let .other(type):
+                try container.encode(type)
             }
         }
         
@@ -82,10 +77,11 @@ public struct File: Codable, Equatable {
     public init(
         name: String,
         extension: String,
+        mimeType: MimeType,
         data: Data
     ) {
         self.name = "\(name).\(`extension`)"
-        self.mimeType = MimeType(extension: `extension`)
+        self.mimeType = mimeType
         self.data = data
     }
     

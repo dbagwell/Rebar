@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 import Foundation
+import MobileCoreServices
+import UniformTypeIdentifiers
 
 extension URL {
     
@@ -56,4 +58,17 @@ extension URL {
         return url
     }
     
+    public var mimeType: File.MimeType {
+        if #available(iOS 14, *), let mimeType = UTType(filenameExtension: self.pathExtension)?.preferredMIMEType {
+            return File.MimeType(type: mimeType)
+        } else if
+            let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self.pathExtension as NSString, nil)?.takeRetainedValue(),
+            let mimetype = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue()
+        {
+            return File.MimeType(type: mimetype as String)
+        } else {
+            return File.MimeType(type: "application/octet-stream")
+        }
+    }
+
 }
