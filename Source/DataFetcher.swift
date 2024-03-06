@@ -39,8 +39,10 @@ public class DataFetcher<ResultType, ErrorType: Error> {
         self.isFetching = true
         
         fetch({ result in
-            self.completionBlocks.forEach({ $0(result) })
-            self.completionBlocks.removeAll()
+            while !self.completionBlocks.isEmpty {
+                self.completionBlocks.popLast()?(result)
+            }
+            
             self.isFetching = false
         })
     }
