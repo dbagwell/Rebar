@@ -24,6 +24,6 @@ targets:
         type: framework
         sources:
             - Source
-            - SupportingFiles/Info.plist
+            - SupportingFiles
         settings:
             PRODUCT_BUNDLE_IDENTIFIER: dbagwell.Rebar
